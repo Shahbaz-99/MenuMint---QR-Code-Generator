@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MenuMint — Digital Menu QR Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --ink: #0a1628;
+            --paper: #f8f9fb;
+            --accent: #2a8a8a;
+            --accent2: #5bb8b8;
+            --muted: #6b7a8d;
+            --line: #e8eaef;
+            --card: #ffffff;
+        }
+
+        html { font-size: 16px; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #f8f9fb;
+            color: var(--ink);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── SOFT BLURRY BACKGROUND BLOBS ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 700px 500px at 15% 20%, rgba(91,184,184,0.13) 0%, transparent 70%),
+                radial-gradient(ellipse 500px 400px at 85% 70%, rgba(42,138,138,0.10) 0%, transparent 65%),
+                radial-gradient(ellipse 400px 350px at 60% 10%, rgba(200,220,230,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse 300px 300px at 10% 80%, rgba(180,210,220,0.10) 0%, transparent 55%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ─── HEADER / NAV ─── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(248,249,251,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--line);
+            padding: 0 clamp(1.5rem, 5vw, 4rem);
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-mark {
+            width: 36px; height: 36px;
+            background: var(--ink);
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        }
+
+        .logo-mark svg { width: 22px; height: 22px; }
+
+        .logo-text {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .logo-text .logo-qr {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .logo-text .logo-craft {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            color: var(--ink);
+            line-height: 1;
+        }
+
+        .logo-pill {
+            margin-left: 8px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #fff;
+            background: var(--accent);
+            border-radius: 4px;
+            padding: 2px 6px;
+            line-height: 1.6;
+            align-self: center;
+        }
+
+        .nav-badge {
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border: 1px solid var(--line);
+            border-radius: 100px;
+            padding: 4px 12px;
+        }
+
+        /* ─── HERO SECTION ─── */
+        .hero {
+            position: relative;
+            padding: clamp(4rem, 10vw, 7rem) clamp(1.5rem, 5vw, 4rem) 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .hero { grid-template-columns: 1fr; gap: 2rem; }
+        }
+
+        .hero-left { padding-top: 1rem; }
+
+        .hero-eyebrow {
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1.25rem;
+        }
+
+        .hero-eyebrow::before {
+            content: '';
+            display: block;
+            width: 24px; height: 1px;
+            background: var(--accent);
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.8rem, 5vw, 4.2rem);
+            font-weight: 800;
+            line-height: 1.0;
+            letter-spacing: -0.04em;
+            color: var(--ink);
+            margin-bottom: 1.5rem;
+        }
+
+        h1 em {
+            font-style: normal;
+            color: var(--accent);
+            position: relative;
+            display: inline-block;
+        }
+
+        h1 em::after {
+            content: '';
+            position: absolute;
+            bottom: 2px; left: 0; right: 0;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 2px;
+            transform: scaleX(0);
+            transform-origin: left;
+            animation: underline-in 0.6s 0.8s cubic-bezier(.22,1,.36,1) forwards;
+        }
+
+        @keyframes underline-in { to { transform: scaleX(1); } }
+
+        .hero-desc {
+            font-size: 1.05rem;
+            font-weight: 300;
+            line-height: 1.7;
+            color: var(--muted);
+            max-width: 400px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--ink);
+            letter-spacing: -0.04em;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+
+        /* ─── FORM CARD ─── */
+        .form-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 24px 80px rgba(0,0,0,0.07);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+        }
+
+        .form-card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-card-sub {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-bottom: 2rem;
+        }
+
+        .field-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"], input[type="url"], select, textarea {
+            width: 100%;
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            color: var(--ink);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(232,73,15,0.1);
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* ─── SUBMIT BUTTON ─── */
+        .btn-generate {
+            width: 100%;
+            margin-top: 1.5rem;
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 0.9rem 1.5rem;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s, transform 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-generate::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s cubic-bezier(.22,1,.36,1);
+            z-index: 0;
+        }
+
+        .btn-generate:hover::after { transform: scaleX(1); }
+
+        .btn-generate span { position: relative; z-index: 1; }
+
+        .btn-generate svg { position: relative; z-index: 1; transition: transform 0.2s; }
+        .btn-generate:hover svg { transform: translateX(4px); }
+
+        /* ─── FEATURE STRIP ─── */
+        .features {
+            max-width: 1200px;
+            margin: 5rem auto 0;
+            padding: 0 clamp(1.5rem, 5vw, 4rem);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--line);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        @media (max-width: 600px) { .features { grid-template-columns: 1fr; } }
+
+        .feature {
+            background: var(--paper);
+            padding: 2rem;
+            transition: background 0.2s;
+        }
+
+        .feature:hover { background: var(--card); }
+
+        .feature-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: var(--ink);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .feature-icon svg { width: 20px; height: 20px; color: #fff; }
+
+        .feature h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .feature p {
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* ─── FOOTER ─── */
+        footer {
+            max-width: 1200px;
+            margin: 4rem auto 0;
+            padding: 2rem clamp(1.5rem, 5vw, 4rem);
+            border-top: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        footer p { font-size: 0.78rem; color: var(--muted); }
+
+        .footer-links { display: flex; gap: 1.5rem; }
+        .footer-links a { font-size: 0.78rem; color: var(--muted); text-decoration: none; }
+        .footer-links a:hover { color: var(--ink); }
+
+        /* ─── DECORATIVE BG CIRCLE ─── */
+        .bg-orb { display: none; }
+
+        /* ─── FADE-IN ANIMATION ─── */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fade-up 0.7s cubic-bezier(.22,1,.36,1) forwards;
+        }
+
+        @keyframes fade-up {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+
+<div class="bg-orb"></div>
+
+<!-- ─── NAVBAR ─── -->
+<header>
+    <a href="#" class="logo">
+        <span class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="7" height="7" rx="1" stroke="white" stroke-width="2"/>
+                <rect x="14" y="3" width="7" height="7" rx="1" stroke="white" stroke-width="2"/>
+                <rect x="3" y="14" width="7" height="7" rx="1" stroke="white" stroke-width="2"/>
+                <rect x="14" y="14" width="3" height="3" rx="0.5" fill="#2a8a8a"/>
+                <rect x="18" y="14" width="3" height="3" rx="0.5" fill="white"/>
+                <rect x="14" y="18" width="3" height="3" rx="0.5" fill="white"/>
+                <rect x="18" y="18" width="3" height="3" rx="0.5" fill="white"/>
+            </svg>
+        </span>
+        <span class="logo-text">
+            <span class="logo-qr">Menu</span><span class="logo-craft">Mint</span>
+        </span>
+
+    </a>
+    <span class="nav-badge">Restaurant Edition</span>
+</header>
+
+<!-- ─── HERO + FORM ─── -->
+<main>
+    <section class="hero">
+        <!-- LEFT: Copy -->
+        <div class="hero-left fade-up">
+            <p class="hero-eyebrow">Contactless Dining Tool</p>
+            <h1>Generate QR Codes for your <em>Digital Menu</em></h1>
+            <p class="hero-desc">
+                Enable contactless ordering in seconds. Paste your menu URL, fill in your restaurant details, and get a print-ready QR code instantly.
+            </p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-num">2s</span>
+                    <span class="stat-label">Generation Time</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num">SVG</span>
+                    <span class="stat-label">Vector Quality</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num">Free</span>
+                    <span class="stat-label">No Sign-up</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Form Card -->
+        <div class="form-card fade-up delay-2">
+            <p class="form-card-title">Create your QR Code</p>
+            <p class="form-card-sub">Fill in your restaurant details below</p>
+
+            <form action="{% url 'generate_qr_codes' %}" method="POST">
+                {% csrf_token %}
+
+                <!-- If using Django's form.as_p, replace below with {{ form.as_p }} -->
+                <!-- Manual field layout for demonstration: -->
+
+                <div class="field-group">
+                    <label for="restaurant_name">Restaurant Name</label>
+                    <input type="text" id="restaurant_name" name="restaurant_name" placeholder="e.g. The Golden Fork" required>
+                </div>
+
+                <div class="field-group">
+                    <label for="url">Menu URL</label>
+                    <input type="url" id="url" name="url" placeholder="https://yourmenu.com/menu" required>
+                </div>
+
+                <div class="field-group">
+                    <label for="size">QR Size</label>
+                    <select id="size" name="size">
+                        <option value="200">Small (200px)</option>
+                        <option value="300" selected>Medium (300px)</option>
+                        <option value="500">Large (500px)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-generate">
+                    <span>Generate QR Code</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ─── FEATURES STRIP ─── -->
+    <section class="features fade-up delay-3" style="margin-top: 5rem;">
+        <div class="feature">
+            <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M14 17h.01M17 14h.01M17 17h.01M17 20h.01M20 14h.01M20 17h.01M20 20h.01"/></svg>
+            </div>
+            <h3>High-Res Output</h3>
+            <p>Download crisp, print-ready QR codes in high resolution — perfect for standees, table cards, and menus.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3>Secure & Private</h3>
+            <p>Your menu URLs are never stored or shared. Every QR code is generated server-side and delivered directly to you.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <h3>Instant Generation</h3>
+            <p>From form submission to downloadable QR code in under 2 seconds. No queue, no waiting, no fuss.</p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>© 2025 MenuMint — Built with Django & Python</p>
+    <div class="footer-links">
+        <a href="#">Documentation</a>
+        <a href="#">GitHub</a>
+        <a href="#">Contact</a>
+    </div>
+</footer>
+
+</body>
+</html>
