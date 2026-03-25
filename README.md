@@ -3,6 +3,8 @@
 **MenuMint** is a minimal and modern QR code generator built with Django.  
 It helps restaurants create and share digital menus instantly using QR codes.
 
+**Project URL** : https://menumint-qr-code-generator.onrender.com/
+
 ---
 
 ## 🚀 Features
